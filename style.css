@@ -139,12 +139,18 @@ h1 {
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-.task-item.drag-over-top {
-  box-shadow: 0 -3px 0 0 #6366f1, 0 1px 3px rgba(0,0,0,0.06);
+.drag-placeholder {
+  border-radius: 11px;
+  background: #eef2ff;
+  border: 2px dashed #a5b4fc;
+  list-style: none;
+  animation: placeholder-in 0.12s ease;
+  transform-origin: top;
 }
 
-.task-item.drag-over-bottom {
-  box-shadow: 0 3px 0 0 #6366f1, 0 1px 3px rgba(0,0,0,0.06);
+@keyframes placeholder-in {
+  from { opacity: 0; transform: scaleY(0.4); }
+  to   { opacity: 1; transform: scaleY(1); }
 }
 
 /* ---------- Delete button ---------- */

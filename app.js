@@ -3,6 +3,8 @@ const ARCHIVE_DAYS = 14;
 
 let state = { tasks: [], archive: [] };
 let draggedId = null;
+let dropTarget = null;
+let placeholder = null;
 let archiveOpen = false;
 
 // ---------- Persistence ----------
@@ -160,40 +162,66 @@ function makeTaskEl(task) {
   li.addEventListener('dragstart', e => {
     draggedId = task.id;
     e.dataTransfer.effectAllowed = 'move';
+    placeholder = document.createElement('li');
+    placeholder.className = 'drag-placeholder';
+    placeholder.style.height = li.offsetHeight + 'px';
+    placeholder.addEventListener('dragover', ev => ev.preventDefault());
+    placeholder.addEventListener('drop', ev => {
+      ev.preventDefault();
+      if (!draggedId || !dropTarget) return;
+      reorder(draggedId, dropTarget.id, dropTarget.before);
+      saveState();
+      render();
+    });
     requestAnimationFrame(() => li.classList.add('dragging'));
   });
 
   li.addEventListener('dragend', () => {
-    draggedId = null;
     li.classList.remove('dragging');
-    clearDragClasses();
+    if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    draggedId = null;
+    dropTarget = null;
+    placeholder = null;
   });
 
   li.addEventListener('dragover', e => {
     e.preventDefault();
-    if (!draggedId || draggedId === task.id) return;
+    if (!draggedId || draggedId === task.id || !placeholder) return;
     const dragged = state.tasks.find(t => t.id === draggedId);
     if (!dragged || dragged.status !== task.status) return;
 
-    clearDragClasses();
     const rect = li.getBoundingClientRect();
-    const insertBefore = e.clientY < rect.top + rect.height / 2;
-    li.classList.add(insertBefore ? 'drag-over-top' : 'drag-over-bottom');
+    const before = e.clientY < rect.top + rect.height / 2;
+    const insertRef = before ? li : li.nextSibling;
+
+    if (placeholder.nextSibling === insertRef || insertRef === placeholder) return;
+
+    const siblings = [...li.parentNode.querySelectorAll('.task-item:not(.dragging)')];
+    const tops = siblings.map(el => el.getBoundingClientRect().top);
+
+    dropTarget = { id: task.id, before };
+    li.parentNode.insertBefore(placeholder, insertRef);
+
+    siblings.forEach((el, i) => {
+      const delta = tops[i] - el.getBoundingClientRect().top;
+      if (delta === 0) return;
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${delta}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform 0.18s ease';
+        el.style.transform = '';
+      });
+    });
+
     e.dataTransfer.dropEffect = 'move';
   });
 
-  li.addEventListener('dragleave', () => clearDragClasses());
-
   li.addEventListener('drop', e => {
     e.preventDefault();
-    clearDragClasses();
-    if (!draggedId || draggedId === task.id) return;
+    if (!draggedId || draggedId === task.id || !dropTarget) return;
     const dragged = state.tasks.find(t => t.id === draggedId);
     if (!dragged || dragged.status !== task.status) return;
-
-    const rect = li.getBoundingClientRect();
-    const insertBefore = e.clientY < rect.top + rect.height / 2;
-    reorder(draggedId, task.id, insertBefore);
+    reorder(draggedId, dropTarget.id, dropTarget.before);
     saveState();
     render();
   });
@@ -226,10 +254,6 @@ function makeArchiveEl(task) {
   return li;
 }
 
-function clearDragClasses() {
-  document.querySelectorAll('.drag-over-top, .drag-over-bottom')
-    .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
-}
 
 // ---------- Render ----------
 
