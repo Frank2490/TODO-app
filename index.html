@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TO DO</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <h1>TO DO</h1>
+
+    <div class="input-row">
+      <input type="text" id="task-input" placeholder="Wpisz co masz do zrobienia..." autocomplete="off">
+      <button id="add-btn" onclick="handleAdd()" aria-label="Dodaj zadanie">+</button>
+    </div>
+
+    <section class="section">
+      <h2 class="section-title">Bieżące <span class="count" id="count-current">0</span></h2>
+      <ul class="task-list" id="list-current"></ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Na potem <span class="count" id="count-later">0</span></h2>
+      <ul class="task-list" id="list-later"></ul>
+    </section>
+
+    <div class="archive-row">
+      <button class="archive-toggle-btn" id="archive-toggle" onclick="toggleArchive()">
+        <span class="archive-arrow" id="archive-arrow">▸</span>
+        Archiwum
+        <span class="count" id="count-archive">0</span>
+      </button>
+    </div>
+
+    <section class="archive-section" id="archive-section">
+      <ul class="task-list archive-list" id="list-archive"></ul>
+      <p class="archive-info">Zadania są automatycznie usuwane po 14 dniach.</p>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
